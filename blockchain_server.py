@@ -42,9 +42,9 @@ def getBalance(user="me"):
         try:
             block_data = block['data']
             if block_data['sndr'] == user:
-                current_balance -= int(block_data['amt'])
+                current_balance -= float(block_data['amt'])
             if block_data['rcvr'] == user:
-                current_balance += int(block_data['amt'])
+                current_balance += float(block_data['amt'])
         except (KeyError, ValueError):
             continue
             
@@ -53,7 +53,7 @@ def getBalance(user="me"):
 def makeTransaction(sndr, rcvr, amt):
     """Enforces state safety boundaries before mining transaction events."""
     balance = getBalance(sndr)
-    if balance < int(amt):
+    if balance < float(amt):
         return "fail"
     
     mine_block_internal(sndr, rcvr, amt)
@@ -99,10 +99,10 @@ if __name__ == "__main__":
                 
             args = loads(message)
             transaction = args['transaction']
-            client_id = str(args['from'])
             
             # --- RPC ROUTING ROUTINES ---
             if transaction['type'] == 'send_money':
+                client_id = str(args['from'])
                 result = makeTransaction(transaction['from'], transaction['to'], transaction['amount'])
                 reply_payload = {'sender': 'server_reply', 'result': result}
                 
@@ -116,6 +116,7 @@ if __name__ == "__main__":
                 })
                 
             elif transaction['type'] == 'balance':
+                client_id = str(args['from'])
                 amt = str(getBalance(client_id))
                 reply_payload = {'sender': 'server_reply', 'result': amt}
                 

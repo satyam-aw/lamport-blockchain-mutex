@@ -1,162 +1,119 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head>
-
-    <title>Lena-Dena Bank Online Blockchain Services</title>
-
-    <style>
-        #chain {
-            display: grid;
-            grid-template-rows: repeat(1, 1fr);
-            grid-template-columns: repeat(6, 1fr);
-            grid-gap: 10px;
-        }
-        #chain > div {
-            background-color: hotpink;
-            color: white;
-            font-size: 1vw;
-            padding: 10px;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: 350px  auto;
-            grid-gap: 10px;           
-        }
-        .button {
-        padding: 5px 5px;
-        font-size: 18px;
-        cursor: pointer;
-        transition-duration: 0.4s;
-        background-color: white;
-        border: 2px solid #008CBA; 
-        color: #008CBA;
-        border-radius: 5px;
-        }
-
-        .button:hover {
-        background-color: #008CBA; 
-        color: white;
-        }
-
-    </style>
+    <meta charset="UTF-8">
+    <title>Lena-Dena Bank | Blockchain Core Services</title>
+    
+    <!-- Flask Dynamic Static File Loader Link -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>    <!-- Updated Socket.IO Client (Matches your modern Python backend) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js" integrity="sha512-aC5ZfKOuGRUiJCv+E/EIWsj49E02BQpuLQbixZe+16Lm1R6AepHZA1xvY92XBQNNbwQoqG4DXCGxwoxBFb5Q1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script type="text/javascript" charset="utf-8">
+    
+    <script type="text/javascript">
         $(document).ready(function() {
-            // Core WebSocket initialization pointing to app.py
-            const socket = io("http://127.0.0.1:8080", {
-                transports: ["websocket", "polling"]
-            });
+            const socket = io("http://127.0.0.1:8080", {transports: ["websocket", "polling"]});
 
             socket.on('connect', function() {
-                console.log("Connected to dashboard server!");
-                socket.emit('my_event', {data: 'connected to the SocketServer...'});
+                $('#log').prepend('<div style="color: #4ADE80; padding: 6px 0; border-bottom: 1px solid #232D45;">⚡ Pipeline connected.</div>');
             });
 
-            // Appends running transaction statuses to the logs panel
             socket.on('my_response', function(msg, cb) {
-                $('#log').prepend('<br>' + $('<div/>').text('logs #' + msg.count + ': ' + msg.data).html());
+                $('#log').prepend(`
+                    <div class="log-item">
+                        <span class="log-count">#${msg.count}</span>
+                        <span>${$('<div/>').text(msg.data).html()}</span>
+                    </div>`
+                );
                 if (typeof cb === 'function') cb();
             });
             
-            // Appends freshly mined transaction blocks visually to the UI chain layout
             socket.on('append_chain', function(msg, cb) {
-                var s = '<div style="margin:5px; padding:10px; border:1px solid #000; border-radius:4px;">' +
-                        '<b>From:</b> ' + msg.sndr + '<br/> ' +
-                        '<b>To:</b> ' + msg.rcvr + '<br/> ' +
-                        '<b>Amount:</b> $' + msg.amt + '</div>';
-                $('#chain').append(s);
+                $('#chain').append(`
+                    <div class="block-card">
+                        <span class="badge">Block Data</span>
+                        <div class="block-row"><span class="block-label">From:</span><span>${msg.sndr}</span></div>
+                        <div class="block-row"><span class="block-label">To:</span><span>${msg.rcvr}</span></div>
+                        <div class="block-row" style="border-top: 1px solid #232D45; margin-top: 4px; padding-top: 4px;">
+                            <span class="block-label">Amount:</span><span class="amount-val">$${msg.amt}</span>
+                        </div>
+                    </div>`
+                );
                 if (typeof cb === 'function') cb();
             });
             
-            // Updates balance strings instantly when incoming queries return values
             socket.on('balance_print', function(msg, cb) {
-                $('#balance_text').text("Balance of " + msg.sndr + " is $" + msg.amt);
+                $('#balance_text').html(`Balance of <span style="color: #00F0FF;">${msg.sndr}</span> is <span style="color: #4ADE80;">$${msg.amt}</span>`);
                 if (typeof cb === 'function') cb();
             });
             
-            $('form#queueTransfer').submit(function(event) {
-                var txn = [$('#from').val(), $('#to').val(), $('#amt').val()];
-                socket.emit('queue_transfer', {data: txn});
+            $('form#queueTransfer').submit(function() {
+                socket.emit('queue_transfer', {data: [$('#from').val(), $('#to').val(), $('#amt').val()]});
+                $('#from').val(''); $('#to').val(''); $('#amt').val('');
                 return false; 
             });
-
-            $('form#executeAll').submit(function(event) {
-                socket.emit('execute_all_transfer');
-                return false;
-            });
-
-            $('form#checkValid').submit(function(event) {
-                socket.emit('check_valid');
-                return false;
-            });
-
-            $('form#balance').submit(function(event) {
-                socket.emit('balance_inquiry', {data: $('#user_id').val()});
-                return false;
-            });           
+            $('form#executeAll').submit(function() { socket.emit('execute_all_transfer'); return false; });
+            $('form#checkValid').submit(function() { socket.emit('check_valid'); return false; });
+            $('form#balance').submit(function() { socket.emit('balance_inquiry', {data: $('#user_id').val()}); return false; });           
         });
     </script>
 </head>
+<body>
 
-<body style="background-color:white;font-family: &quot;Trebuchet MS&quot; , sans-serif;">
-
-    <div class="grid-container">
+    <header>
         <div>
-            <h2 style="background-color:white;">Send Money</h2>
-            <form id="queueTransfer" method="POST" action='#'>
-                <input type="text" name="emit_data" id="from" placeholder="From"><br/>
-                <input type="text" name="emit_data" id="to" placeholder="To"><br/>
-                <input type="text" name="emit_data" id="amt" placeholder="Amount in $"><br/><br/><br/>
-                <input type="submit" value="Money transfer">
-            </form>
+            <h1>🏛️ Lena-Dena Bank</h1>
+            <div class="subtitle">Asynchronous Chandy-Lamport / Lamport Mutex Ledger Core Engine</div>
         </div>
-        <div>
-            <div id="chain">
+        <div class="header-buttons">
+            <form id="executeAll"><button type="submit" class="btn-header">⚙️ Execute Queue</button></form>
+            <form id="checkValid"><button type="submit" class="btn-header btn-verify">🔍 Verify Integrity</button></form>
+        </div>
+    </header>
 
-                <div>
-                    From: (Genesis)<br/>To: (Genesis)<br/>Amount: (Genesis)<br/>
+    <main class="main-layout">
+        <div class="left-panel">
+            <section class="card">
+                <h2>💸 Outbound Remittance</h2>
+                <form id="queueTransfer">
+                    <div class="form-group"><label>Debtor (From)</label><input type="text" id="from" placeholder="node_7001" required></div>
+                    <div class="form-group"><label>Creditor (To)</label><input type="text" id="to" placeholder="node_7002" required></div>
+                    <div class="form-group"><label>Value ($)</label><input type="text" id="amt" placeholder="0.00" required style="color: #4ADE80; font-weight: bold;"></div>
+                    <button type="submit" class="btn-submit">Dispatch Wire Payload</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>🔍 State Balance Inquiry</h2>
+                <form id="balance">
+                    <div class="form-group">
+                        <label>Registry Node Key</label>
+                        <div class="query-row"><input type="text" id="user_id" placeholder="node_7001" required><button type="submit" class="btn-query">Query</button></div>
+                    </div>
+                </form>
+                <div class="balance-box"><h3 id="balance_text" style="color: #94A3B8; font-size: 14px;">Balance of ?? is $0.00</h3></div>
+            </section>
+        </div>
+
+        <div class="right-panel">
+            <div class="card" style="height: 100%;">
+                <h2>⛓️ Decentralized Blockchain State Visualization</h2>
+                <div id="chain" class="chain-grid">
+                    <div class="block-card genesis">
+                        <span class="badge">Genesis Origin</span>
+                        <div class="block-row"><span class="block-label">From:</span><span>System</span></div>
+                        <div class="block-row"><span class="block-label">To:</span><span>System</span></div>
+                        <div class="block-row" style="border-top: 1px solid #EC4899; margin-top: 4px; padding-top: 4px;"><span class="block-label">Amount:</span><span style="color: #EC4899; font-weight: bold;">Origin Block</span></div>
+                    </div>
                 </div>
-
             </div>
-        </div> 
-             
-    </div>
-    <br/><br/>
-        <hr/> 
-    <div class="grid-container"> 
-        
-        <div>
-            <h2 style="background-color:white;">Balance Inquiry</h2><br/>
-            <form id="balance" method="POST" action='#'>
-                <input type="text" name="user_id" id="user_id" placeholder="user# 1,2,3"><br/><br/>
-                <input type="submit" value="Balance Inquiry">
-            </form>  
-    </form>   
-            </form>  
         </div>
-        <div style="text-align: center">
-            <form id="executeAll" method="POST" action='#' style="text-align: center">
-                <input type="submit" value="Execute All queued Transfers"  class="button">
-            </form> 
+    </main>
 
-            <br/><br/>
-            <h2 id="balance_text">Balance of ?? is $0.00</h2>  
-           
-        </div>
-        <br/>
-        <div style="text-align: center">
-            <form id="checkValid" method="POST" action='#' style="text-align: center">
-                <input type="submit" value="Check if Blockchain is valid"  class="button"  style="color: hotpink;border: 2px solid hotpink;">
-            </form> 
-        </div>
-    </div>
-    <br/>
+    <footer class="card">
+        <h2 style="font-size: 14px; text-transform: uppercase; color: #94A3B8; margin-bottom: 12px;">📋 Real-Time Distributed Engine Event Log</h2>
+        <div id="log"></div>
+    </footer>
 
-    <hr/><br/>
-
-    <h2 style="background-color:white;">Logs</h2>
-    <div id="log">
-    </div>
 </body>
 </html>

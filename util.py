@@ -41,7 +41,6 @@ def get_or_create_node_address(node_id):
 def send_data(destination, data):
     """Dispatches a network payload safely using the centralized registry."""
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
     if isinstance(destination, tuple):
         client_addr = destination
     else:

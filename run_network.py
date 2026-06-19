@@ -17,7 +17,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 def launch_script(script_name, node_id=None):
     """Spawns straightforward background processes without process group overhead."""
-    cmd = [sys.executable, script_name]
+    cmd = [sys.executable, "-u", script_name] 
     if node_id:
         cmd.extend(["--id", str(node_id)])
         log_file = open(os.path.join(log_dir, f"node_{node_id}.log"), "w", encoding="utf-8")
