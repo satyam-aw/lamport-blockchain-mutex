@@ -7,43 +7,39 @@ import os
 from util import NODE_REGISTRY
 
 # DYNAMIC GENERALIZATION: Loop through all keys, skip 'server', and pull the ports
-ports = [value for key, value in NODE_REGISTRY.items() if key != 'server']
-print(f"[LAUNCHER] Dynamically extracted ports from NODE_REGISTRY: {ports}")
+node_ids = [key for key, value in NODE_REGISTRY.items() if key != 'server']
+log_files = []
+print(f"[LAUNCHER] Dynamically extracted IDs from NODE_REGISTRY: {node_ids}")
 
 # Ensure the node_logs directory exists safely before booting up processes
 log_dir = "node_logs"
 os.makedirs(log_dir, exist_ok=True)
 
-def launch_script(script_name, port=None):
+def launch_script(script_name, node_id=None):
     """Spawns straightforward background processes without process group overhead."""
     cmd = [sys.executable, script_name]
-    if port:
-        cmd.extend(["--id", str(port)])
-        log_file = open(os.path.join(log_dir, f"node_{port}.log"), "w", encoding="utf-8")
-        print(f"[LAUNCHER] Starting {script_name} with ID {port} (Logging to node_logs/node_{port}.log)...")
+    if node_id:
+        cmd.extend(["--id", str(node_id)])
+        log_file = open(os.path.join(log_dir, f"node_{node_id}.log"), "w", encoding="utf-8")
+        log_files.append(log_file)
+        print(f"[LAUNCHER] Starting {script_name} with ID {node_id} (Logging to node_logs/node_{node_id}.log)...")
         return subprocess.Popen(cmd, stdout=log_file, stderr=log_file)
-        
-    print(f"[LAUNCHER] Starting {script_name} ...")
-    return subprocess.Popen(cmd)
+    else:   
+        print(f"[LAUNCHER] Starting {script_name} ...")
+        return subprocess.Popen(cmd)
 
 def main():
     processes = []
-    log_files = []
     
     try:
         client_script = "client_node.py"
         
         # Step 1: Launch ALL Automated Edge Client Nodes found in the registry dynamically
-        for port in ports:
-            cmd = [sys.executable, client_script, "--id", str(port)]
-            log_file = open(os.path.join(log_dir, f"node_{port}.log"), "w", encoding="utf-8")
-            log_files.append(log_file)
-            
-            print(f"[LAUNCHER] Starting {client_script} with ID {port} (Logging to node_logs/node_{port}.log)...")
-            proc = subprocess.Popen(cmd, stdout=log_file, stderr=log_file)
+        for id in node_ids:
+            proc = launch_script(client_script, id)
             processes.append(proc)
+            time.sleep(0.3) # Pause to allow client sockets to bind cleanly
             
-        time.sleep(1.0) # Pause to allow client sockets to bind cleanly
 
         # Step 2: Launch Core Blockchain TCP Server
         blockchain_server_proc = launch_script("blockchain_server.py")
@@ -55,7 +51,7 @@ def main():
         processes.append(app_proc)
 
         # Generate a clean string of the tracked log files for the terminal output display
-        log_file_list = ", ".join([f"node_{p}.log" for p in ports])
+        log_file_list = ", ".join([f"node_{p}.log" for p in node_ids])
 
         print("\n" + "="*60)
         print("🚀 ALL SYSTEMS ONLINE! Open your browser at: http://127.0.0.1:8080")

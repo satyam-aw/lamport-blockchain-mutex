@@ -10,11 +10,11 @@ server_addr = (default_ip, 1234)
 # Central Network Registry Matrix
 NODE_REGISTRY = {
     'server': server_addr,
-    '1': (default_ip, 7001),
-    '2': (default_ip, 7002),
-    '3': (default_ip, 7003),
-    '4': (default_ip, 7004), 
-    '5': (default_ip, 7005),
+    '1': (default_ip, 9711),
+    '2': (default_ip, 9712),
+    '3': (default_ip, 9713),
+    '4': (default_ip, 9714), 
+    '5': (default_ip, 9715),
 }
 
 
