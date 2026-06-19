@@ -39,42 +39,48 @@
         }
 
     </style>
-    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>    <!-- Updated Socket.IO Client (Matches your modern Python backend) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js" integrity="sha512-aC5ZfKOuGRUiJCv+E/EIWsj49E02BQpuLQbixZe+16Lm1R6AepHZA1xvY92XBQNNbwQoqG4DXCGxwoxBFb5Q1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
-
-            var socket = io();
+            // Core WebSocket initialization pointing to app.py
+            const socket = io("http://127.0.0.1:8080", {
+                transports: ["websocket", "polling"]
+            });
 
             socket.on('connect', function() {
+                console.log("Connected to dashboard server!");
                 socket.emit('my_event', {data: 'connected to the SocketServer...'});
             });
 
+            // Appends running transaction statuses to the logs panel
             socket.on('my_response', function(msg, cb) {
                 $('#log').prepend('<br>' + $('<div/>').text('logs #' + msg.count + ': ' + msg.data).html());
-                if (cb)
-                    cb();
+                if (typeof cb === 'function') cb();
             });
             
+            // Appends freshly mined transaction blocks visually to the UI chain layout
             socket.on('append_chain', function(msg, cb) {
-                var s = '<div>'+'From: '+msg.sndr+'<br/> To: '+msg.rcvr+'<br/> Amount: '+msg.amt+'</div>'
+                var s = '<div style="margin:5px; padding:10px; border:1px solid #000; border-radius:4px;">' +
+                        '<b>From:</b> ' + msg.sndr + '<br/> ' +
+                        '<b>To:</b> ' + msg.rcvr + '<br/> ' +
+                        '<b>Amount:</b> $' + msg.amt + '</div>';
                 $('#chain').append(s);
-                if (cb)
-                    cb();
+                if (typeof cb === 'function') cb();
             });
             
+            // Updates balance strings instantly when incoming queries return values
             socket.on('balance_print', function(msg, cb) {
-                $('#balance_text').text("Balance of "+msg.sndr+" is $"+msg.amt);
-                if (cb)
-                    cb();
+                $('#balance_text').text("Balance of " + msg.sndr + " is $" + msg.amt);
+                if (typeof cb === 'function') cb();
             });
             
-
             $('form#queueTransfer').submit(function(event) {
-                txn = [$('#from').val(),$('#to').val(),$('#amt').val()]
+                var txn = [$('#from').val(), $('#to').val(), $('#amt').val()];
                 socket.emit('queue_transfer', {data: txn});
-                return false;
+                return false; 
             });
+
             $('form#executeAll').submit(function(event) {
                 socket.emit('execute_all_transfer');
                 return false;
@@ -84,10 +90,10 @@
                 socket.emit('check_valid');
                 return false;
             });
+
             $('form#balance').submit(function(event) {
                 socket.emit('balance_inquiry', {data: $('#user_id').val()});
                 return false;
-
             });           
         });
     </script>

@@ -69,6 +69,7 @@ def check_valid():
 
 @socket_.on('balance_inquiry')
 def balance_inquiry(message):
+    print("\nbalance inquiry ")
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response', {'data': f"Enqueued balance inquiry for {message['data']}", 'count': session['receive_count']}, broadcast=True)
 
@@ -91,7 +92,7 @@ def send_money_result(message):
         emit('append_chain', {'sndr':sndr,'rcvr':rcvr, 'amt':amt}, broadcast=True)
 
 @socket_.on('balance_inquiry_result')
-def send_money_result(message):
+def balance_inquiry_result(message):  
     sndr, amt = message['data'], message['amt']
     emit('my_response', {'data': f"Current balance of {sndr} is ${amt}", 'count': '?'}, broadcast=True)
     emit('balance_print', {'sndr': sndr, 'amt':amt }, broadcast=True)
@@ -114,4 +115,4 @@ def disconnect_request():
 
 if __name__ == '__main__':
     
-    socket_.run(app, debug=True)
+    socket_.run(app, debug=False, port=8080)
