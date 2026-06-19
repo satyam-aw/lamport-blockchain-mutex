@@ -10,10 +10,13 @@ server_addr = (default_ip, 1234)
 # Central Network Registry Matrix
 NODE_REGISTRY = {
     'server': server_addr,
-    '1': (default_ip, 8001),
-    '2': (default_ip, 8002),
-    '3': (default_ip, 8003),
+    '1': (default_ip, 7001),
+    '2': (default_ip, 7002),
+    '3': (default_ip, 7003),
+    '4': (default_ip, 7004), 
+    '5': (default_ip, 7005),
 }
+
 
 def get_or_create_node_address(node_id):
     """

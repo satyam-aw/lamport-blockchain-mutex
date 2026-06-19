@@ -1,6 +1,7 @@
 import threading
 import time
 from util import NODE_REGISTRY, get_or_create_node_address, get_all_peer_ids, send_data
+import random
 
 class Client:
     def __init__(self, id):
@@ -52,7 +53,8 @@ class Client:
         with self.lock:
             print('Head of execution queue: ', list([x[0:2] for x in self.queue]))
         
-        time.sleep(3)
+        # Generates a random float between 0.1 and 1.0 seconds (100ms to 1000ms)
+        time.sleep(random.uniform(0.1, 1.0))
         total_peers_required = len(get_all_peer_ids(self.id))
         data_to_send = None
         
@@ -75,7 +77,9 @@ class Client:
         x.start()
 
     def thread_function_send_requests(self, args):
-        time.sleep(3)
+        # Generates a random float between 0.1 and 1.0 seconds (100ms to 1000ms)
+        time.sleep(random.uniform(0.1, 1.0))
+
         print('Sending requests to clients....')
         for target_node in get_all_peer_ids(self.id):
             data = {
