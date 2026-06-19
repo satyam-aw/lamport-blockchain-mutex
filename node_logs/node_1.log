@@ -1,2 +1,74 @@
 Initializing client  1
 Client 1 operational node listening actively on 127.0.0.1:9711
+Received request from server. Transaction:  {'type': 'balance', 'from': '1'}
+Adding new request [[1, '1']]
+Sending reply to client 4
+Adding new request [[1, '1'], [1, '4']]
+Sending reply to client 5
+Adding new request [[1, '1'], [1, '4'], [1, '5']]
+Sending requests to clients....
+Received reply from  2
+Received reply from  3
+Received reply from  4
+Received reply from  5
+Head of execution queue:  [[1, '1'], [1, '4'], [1, '5']]
+Sending reply to client 3
+Adding new request [[1, '1'], [1, '3'], [1, '4'], [1, '5']]
+Executing transfer request
+Finished execution. Reply from server:  10
+Sending reply to client 2
+Adding new request [[1, '2'], [1, '3'], [1, '4'], [1, '5']]
+Release received from ............. 2
+Queue state post-release: [[1, '3'], [1, '4'], [1, '5']]
+Head of execution queue:  [[1, '3'], [1, '4'], [1, '5']]
+Release received from ............. 3
+Queue state post-release: [[1, '4'], [1, '5']]
+Head of execution queue:  [[1, '4'], [1, '5']]
+Release received from ............. 4
+Queue state post-release: [[1, '5']]
+Head of execution queue:  [[1, '5']]
+Release received from ............. 5
+Queue state post-release: []
+Head of execution queue:  []
+Received request from server. Transaction:  {'type': 'send_money', 'from': '1', 'to': '2', 'amount': '0.1'}
+Adding new request [[7, '1']]
+Sending reply to client 3
+Adding new request [[7, '1'], [7, '3']]
+Sending reply to client 2
+Adding new request [[7, '1'], [7, '2'], [7, '3']]
+Sending requests to clients....
+Received reply from  2
+Received reply from  3
+Received reply from  4
+Received reply from  5
+Head of execution queue:  [[7, '1'], [7, '2'], [7, '3']]
+Executing transfer request
+Finished execution. Reply from server:  pass
+Release received from ............. 2
+Queue state post-release: [[7, '3']]
+Head of execution queue:  [[7, '3']]
+Release received from ............. 3
+Queue state post-release: []
+Head of execution queue:  []
+Received request from server. Transaction:  {'type': 'send_money', 'from': '1', 'to': '4', 'amount': '2.1'}
+Adding new request [[11, '1']]
+Sending reply to client 5
+Adding new request [[11, '1'], [11, '5']]
+Sending reply to client 2
+Adding new request [[11, '1'], [11, '2'], [11, '5']]
+Sending requests to clients....
+Received reply from  2
+Received reply from  3
+Received reply from  4
+Received reply from  5
+Head of execution queue:  [[11, '1'], [11, '2'], [11, '5']]
+Sending reply to client 5
+Adding new request [[11, '1'], [11, '2'], [11, '5'], [12, '5']]
+Executing transfer request
+Finished execution. Reply from server:  pass
+Release received from ............. 2
+Queue state post-release: [[11, '5'], [12, '5']]
+Head of execution queue:  [[11, '5'], [12, '5']]
+Release received from ............. 5
+Queue state post-release: []
+Head of execution queue:  []

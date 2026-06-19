@@ -15,14 +15,15 @@
             const socket = io("http://127.0.0.1:8080", {transports: ["websocket", "polling"]});
 
             socket.on('connect', function() {
-                $('#log').prepend('<div style="color: #4ADE80; padding: 6px 0; border-bottom: 1px solid #232D45;">⚡ Pipeline connected.</div>');
+                $('#log').prepend('<div style="color: #16A34A; font-family: monospace; padding: 6px 0; border-bottom: 1px solid #E2E8F0; font-weight: bold;">⚡ Pipeline connected.</div>');
             });
 
             socket.on('my_response', function(msg, cb) {
+                const cleanMsg = $('<div/>').text(msg.data).html();
                 $('#log').prepend(`
                     <div class="log-item">
                         <span class="log-count">#${msg.count}</span>
-                        <span>${$('<div/>').text(msg.data).html()}</span>
+                        <span style="color: #334155; font-family: monospace;">${cleanMsg}</span>
                     </div>`
                 );
                 if (typeof cb === 'function') cb();
@@ -43,7 +44,7 @@
             });
             
             socket.on('balance_print', function(msg, cb) {
-                $('#balance_text').html(`Balance of <span style="color: #00F0FF;">${msg.sndr}</span> is <span style="color: #4ADE80;">$${msg.amt}</span>`);
+                $('#balance_text').html(`Balance of <span style="color: #0284C7; font-weight: bold;">${msg.sndr}</span> is <span style="color: #16A34A; font-family: monospace; font-weight: bold;">$${msg.amt}</span>`);
                 if (typeof cb === 'function') cb();
             });
             

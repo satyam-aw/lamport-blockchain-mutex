@@ -4,6 +4,12 @@ A high-fidelity academic platform simulating a decentralized blockchain consensu
 
 Crucially, the architecture utilizes the **Chandy-Lamport Distributed Snapshot Algorithm** to capture consistent global states across asynchronous nodes without suspending real-time transaction processing.
 
+## Video Demonstration
+
+[![Watch the Simulation](https://img.youtube.com/vi/0dgBuVx6GFQ/maxresdefault.jpg)](https://youtu.be/0dgBuVx6GFQ)
+
+*Click the image above to watch a walk-through of the distributed synchronization execution space and telemetry dashboard dashboard.*
+
 ---
 
 ## Core Consensus & Distributed State Synchronization
