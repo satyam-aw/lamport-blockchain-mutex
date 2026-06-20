@@ -6,7 +6,7 @@ Crucially, the architecture utilizes **Lamport's Distributed Mutual Exclusion Al
 
 ## Video Demonstration
 
-[![Watch the Simulation](https://img.youtube.com/vi/0dgBuVx6GFQ/maxresdefault.jpg)](https://youtu.be/0dgBuVx6GFQ)
+[![Watch the Simulation](https://img.youtube.com/vi/K6w52aim0ig/maxresdefault.jpg)](https://youtu.be/K6w52aim0ig)
 
 *Click the image above to watch a walk-through of the distributed synchronization execution space and telemetry dashboard.*
 

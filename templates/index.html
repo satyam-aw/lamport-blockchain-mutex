@@ -12,7 +12,8 @@
     
     <script type="text/javascript">
         $(document).ready(function() {
-            const socket = io("http://127.0.0.1:8080", {transports: ["websocket", "polling"]});
+            // Auto-detects hosting port/IP to prevent protocol-mismatch connection blocks
+            const socket = io({transports: ["websocket", "polling"]});
 
             socket.on('connect', function() {
                 $('#log').prepend('<div style="color: #16A34A; font-family: monospace; padding: 6px 0; border-bottom: 1px solid #E2E8F0; font-weight: bold;">⚡ Pipeline connected.</div>');
@@ -64,7 +65,7 @@
     <header>
         <div>
             <h1>🏛️ Lena-Dena Bank</h1>
-            <div class="subtitle">Asynchronous Chandy-Lamport / Lamport Mutex Ledger Core Engine</div>
+            <div class="subtitle"> Lamport Mutex Ledger Core Engine</div>
         </div>
         <div class="header-buttons">
             <form id="executeAll"><button type="submit" class="btn-header">⚙️ Execute Queue</button></form>
@@ -98,7 +99,7 @@
 
         <div class="right-panel">
             <div class="card" style="height: 100%;">
-                <h2>⛓️ Decentralized Blockchain State Visualization</h2>
+                <h2>⛓️ Centralized Blockchain State Visualization</h2>
                 <div id="chain" class="chain-grid">
                     <div class="block-card genesis">
                         <span class="badge">Genesis Origin</span>
@@ -112,7 +113,7 @@
     </main>
 
     <footer class="card">
-        <h2 style="font-size: 14px; text-transform: uppercase; color: #94A3B8; margin-bottom: 12px;">📋 Real-Time Distributed Engine Event Log</h2>
+        <h2 style="font-size: 14px; text-transform: uppercase; color: #94A3B8; margin-bottom: 12px;">📋 Real-Time Concensus Engine Event Log</h2>
         <div id="log"></div>
     </footer>
 
