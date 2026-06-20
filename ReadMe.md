@@ -1,51 +1,62 @@
-# Decentralized Blockchain Network and Chandy-Lamport Snapshot Simulation
+# Centralized Blockchain Network with Lamport's Distributed Mutual Exclusion
 
-A high-fidelity academic platform simulating a decentralized blockchain consensus network. This system decouples asynchronous web visualization overlays from the underlying synchronous Remote Procedure Call (RPC) network layer. The framework models state replication, automated transaction serialization, linear ledger auditability, and dynamic fault isolation. 
+A high-fidelity academic platform simulating a distributed network accessing a centralized, non-replicated blockchain ledger. The framework models state synchronization, automated transaction serialization, linear ledger auditability, and distributed concurrency control. 
 
-Crucially, the architecture utilizes the **Chandy-Lamport Distributed Snapshot Algorithm** to capture consistent global states across asynchronous nodes without suspending real-time transaction processing.
+Crucially, the architecture utilizes **Lamport's Distributed Mutual Exclusion Algorithm** with a totally-ordered logical clock to ensure only one client modifies or queries the shared ledger at any given moment.
 
 ## Video Demonstration
 
-[![Watch the Simulation](https://img.youtube.com/vi/0dgBuVx6GFQ/maxresdefault.jpg)](https://youtu.be/0dgBuVx6GFQ)
+[![Watch the Simulation](https://img.youtube.com/vi/K6w52aim0ig/maxresdefault.jpg)](https://youtu.be/K6w52aim0ig)
 
-*Click the image above to watch a walk-through of the distributed synchronization execution space and telemetry dashboard dashboard.*
+*Click the image above to watch a walk-through of the distributed synchronization execution space and telemetry dashboard.*
 
 ---
 
-## Core Consensus & Distributed State Synchronization
+## Core Consensus & Distributed Mutual Exclusion
 
-### The Chandy-Lamport Snapshot Algorithm
-To verify ledger integrity and audit node states across the network without halting execution, the framework implements a strict variant of the **Chandy-Lamport Distributed Snapshot Algorithm**. 
+To safely append transactions and prevent race conditions on the untrusted server, clients must obtain exclusive access using **Lamport's Distributed Mutex Algorithm**. 
 
-* **Marker Propagation:** When a global state audit or validation check is triggered via the presentation gateway, a control message (`Marker`) is injected into the network via `blockchain_server.py`.
-* **Local State Capture:** Upon receiving the `Marker` for the first time, an edge client node instantly records its internal state (including its local blockchain copy and ledger balances) and begins tracking incoming transaction channels.
-* **Channel State Recording:** The node records incoming messages on all adjacent channels until it receives a matching `Marker` from each inbound connection. This ensures a cryptographically verifiable, consistent global snapshot is achieved, preventing anomalies such as double-spending or orphan blocks during network transmission delays.
+### Totally-Ordered Logical Clocks
+* Each client maintains a local Lamport logical clock.
+* Tie-breaking uses a totally-ordered tuple: `⟨Lamportclock, Processid⟩`.
+
+### Three-Phase Synchronization Protocol
+1. **The Request Phase:** A client increments its clock, logs its own timestamped request in its local queue, and broadcasts a `REQUEST` packet to all peer clients.
+2. **The Reply Phase:** Peer clients insert the incoming request into their sorted local queues and immediately return a timestamped `REPLY` packet.
+3. **The Release Phase:** After completing its critical section task, the client pops the request from its queue and broadcasts a `RELEASE` packet, prompting peers to update their queues.
+
+### Critical Section Execution Criteria
+A client process entry to the critical section (the blockchain master) occurs if and only if:
+* Its own request sits at the **absolute top** of its local sorted request queue.
+* It has successfully received a timestamped `REPLY` from **all** other active clients in the registry.
 
 ---
 
 ## Architectural Topology and Communication Protocol
 
-To eliminate performance degradation (such as I/O blocking or thread starvation) caused by computationally intensive operations like Proof-of-Work (PoW) mining, the architecture enforces a strict separation of concerns across three micro-architectural tiers:
+The system enforces a strict separation of concerns across three micro-architectural tiers to handle asynchronous user events and synchronous distributed locking:
 
 ### 1. Presentation & Gateway Layer (`app.py` ➔ Port 8080)
-* Hosts a non-blocking HTTP and WebSocket daemon managed by the `Flask-SocketIO` engine wrapper.
-* Serves the event-driven HTML5 telemetry dashboard interface and manages a stateful client pipeline via Engine.IO v4.
-* Intercepts asynchronous browser events and serializes them before forwarding payloads to the underlying consensus layers over raw TCP.
+* Hosts a non-blocking HTTP and WebSocket daemon managed by the `Flask-SocketIO` wrapper.
+* Serves the event-driven HTML5 telemetry dashboard interface.
+* Intercepts asynchronous browser events and serializes them before forwarding payloads to the underlying client nodes.
 
 ### 2. Coordination & Master Control Layer (`blockchain_server.py` ➔ Port 5000)
-* Functions as the central backbone network listener utilizing primitive BSD raw TCP stream sockets (`SOCK_STREAM`).
-* Manages the volatile, centralized transaction buffer (`queue = []`) and computes ledger asset states on-demand via O(N) linear traversal.
-* Spawns upstream push-only Socket.IO client instances to mirror transaction processing, balance changes, and Chandy-Lamport global state results directly to the 8080 gateway.
+* Functions as the untrusted, centralized "blockchain master" ledger listener using raw TCP stream sockets.
+* Contains a single transaction per block (`<S, R, amt>`) and builds blocks with strict linear cryptographic chaining (`SHA-256`).
+* **Balance Queries:** Traverses the entire chain on-demand via \(O(N)\) linear traversal to compute balances without modifying state.
+* **Transfer Spooling:** Accepts verified block proposals from the client holding the mutex, appending them directly to the chain.
 
-### 3. Distributed Compute Consensus Clusters (`client_node.py` ➔ Dynamic Registry Ports)
-* Models autonomous verification nodes executing independent state ledger changes.
-* Continuously monitor local TCP ports assigned via the global registry layout to compute transaction bounds, manage local message queues, and handle cryptographic validation sweeps.
+### 3. Distributed Compute Nodes (`client_node.py` ➔ Dynamic Registry Ports)
+* Models autonomous network participants starting with an initial ledger balance of **\$10**.
+* Manage a local sorted request queue and handle the peer-to-peer `REQUEST`, `REPLY`, and `RELEASE` network message layer.
+* Enforces a mandatory **3-second artificial network transmission delay** on all outbound messages to clearly demonstrate and debug concurrent race conditions.
 
 ---
 
 ## Matrix-Driven Process Lifecycle Management
 
-The execution space relies on a generalized, cross-platform controller script (`run_network.py`) that abstracts operating system discrepancies between native Windows (Win32) environments and Linux environments like the Windows Subsystem for Linux (WSL).
+The execution space relies on a generalized, cross-platform controller script (`run_network.py`) that abstracts operating system discrepancies between native Windows (Win32) environments and Linux/WSL environments.
 
 ### Topology Mapping via `NODE_REGISTRY`
 The network layout avoids hardcoded configurations by dynamically bootstrapping itself from the central matrix inside `util.py`:
@@ -53,17 +64,17 @@ The network layout avoids hardcoded configurations by dynamically bootstrapping 
 ```python
 # Sample Configuration inside util.py
 NODE_REGISTRY = {
-    'server': server_addr,       # Master Engine Endpoint Binding
-    '1': (default_ip, 7001),     # Distributed Cluster Node 1
-    '2': (default_ip, 7002),     # Distributed Cluster Node 2
-    '3': (default_ip, 7003),     # Distributed Cluster Node 3
+    'server': server_addr,       # Master Blockchain Server Endpoint Binding
+    '1': (default_ip, 7001),     # Distributed Client Node 1
+    '2': (default_ip, 7002),     # Distributed Client Node 2
+    '3': (default_ip, 7003),     # Distributed Client Node 3
 }
 ```
 
 The orchestration engine (`run_network.py`) processes this environment schema automatically:
 * **Dynamic Key Discovery:** Loops through all active keys inside `NODE_REGISTRY`, dynamically skipping the `'server'` definition to isolate and spawn edge compute nodes.
 * **I/O Redirection & Isolation:** Spawns independent background processes using `subprocess.Popen`. It redirects each client node's standard output (`stdout`) and standard error (`stderr`) streams into isolated `.log` files cached in the `/node_logs/` sub-directory.
-* **Deterministic Socket Reclamation:** Catches SIGINT (`KeyboardInterrupt` / `Ctrl+C`) and gracefully terminates each background subprocess PID sequentially across platforms, ensuring zero ghost processes remain to lock system network sockets.
+* **Deterministic Socket Reclamation:** Catches SIGINT (`Ctrl+C`) and gracefully terminates each background subprocess PID sequentially across platforms, ensuring zero ghost processes remain to lock system network sockets.
 
 ---
 
@@ -73,10 +84,10 @@ The orchestration engine (`run_network.py`) processes this environment schema au
 📁 (root)/
 │
 ├── 📄 run_network.py          # Cross-platform multi-process orchestration module
-├── 📄 blockchain_server.py    # Master ledger controller daemon (State Machine)
+├── 📄 blockchain_server.py    # Master centralized ledger daemon (Untrusted Master)
 ├── 📄 app.py                  # Asynchronous HTTP/WebSocket middleware gateway
-├── 📄 client_node.py          # Edge cluster compute node and consensus validator
-├── 📄 blockchain.py           # Cryptographic engine (SHA-256 / Proof-of-Work rules)
+├── 📄 client_node.py          # Edge client node executing Lamport Mutex logic
+├── 📄 blockchain.py           # Cryptographic hashing engine (SHA-256 block rules)
 ├── 📄 util.py                 # Central topology map and matrix registry (`NODE_REGISTRY`)
 │
 ├── 📁 templates/              # Presentation layer asset directory
@@ -90,6 +101,6 @@ The orchestration engine (`run_network.py`) processes this environment schema au
    python run_network.py
    ```
 2. **Access Web Telemetry UI:** Direct your desktop web browser interface to: `http://127.0.0.1:8080`
-3. **Transaction Serialization (Queue Transfer):** Submits a transaction array (`[Sender, Receiver, Amount]`) over the WebSocket channel, appending state variables without introducing page lifecycle reloads.
-4. **Synchronous Queue Block Processing:** Sequentially flushes the transaction queue, executing low-level TCP RPC lookups between the coordinator and target edge nodes to compute balances.
-5. **Distributed Global State Capture (Audit):** Triggers the **Chandy-Lamport validation sequence**, propagating marker packets across the system to record a consistent ledger state and evaluate block hash references to mathematically verify the structural integrity of the blockchain.
+3. **Mutex Acquisition Request:** Requesting a balance or transfer transaction causes a client to broadcast `REQUEST` packets to its peers, logging state updates with a 3-second artificial transmission delay.
+4. **Synchronous Ledger Execution:** Once the client verifies it holds the distributed lock (top of its local queue + all replies received), it securely queries the blockchain master or appends a cryptographically signed transaction block.
+5. **Mutex Release:** The client broadcasts a `RELEASE` packet to clear the distributed lock state, updating all peer queues so the next sequential process can proceed.
