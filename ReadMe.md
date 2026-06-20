@@ -36,6 +36,11 @@ A client process entry to the critical section (the blockchain master) occurs if
 
 The system enforces a strict separation of concerns across three micro-architectural tiers to handle asynchronous user events and synchronous distributed locking:
 
+<p align="center">
+  <img src="static/lamport_block_diagram.svg" alt="System Architecture" width="750"><br>
+  <em>Figure 1: Lamport Mutex-Driven Distributed Transaction Ledger Architecture</em>
+</p>
+
 ### 1. Presentation & Gateway Layer (`app.py` ➔ Port 8080)
 * Hosts a non-blocking HTTP and WebSocket daemon managed by the `Flask-SocketIO` wrapper.
 * Serves the event-driven HTML5 telemetry dashboard interface.
@@ -50,8 +55,8 @@ The system enforces a strict separation of concerns across three micro-architect
 ### 3. Distributed Compute Nodes (`client_node.py` ➔ Dynamic Registry Ports)
 * Models autonomous network participants starting with an initial ledger balance of **\$10**.
 * Manage a local sorted request queue and handle the peer-to-peer `REQUEST`, `REPLY`, and `RELEASE` network message layer.
-* Enforces a mandatory **3-second artificial network transmission delay** on all outbound messages to clearly demonstrate and debug concurrent race conditions.
-
+* Simulates adverse network conditions by introducing a randomized **100ms – 1000ms artificial latency** on outbound messages, ensuring robust handling of concurrent race conditions.
+  
 ---
 
 ## Matrix-Driven Process Lifecycle Management
@@ -101,6 +106,6 @@ The orchestration engine (`run_network.py`) processes this environment schema au
    python run_network.py
    ```
 2. **Access Web Telemetry UI:** Direct your desktop web browser interface to: `http://127.0.0.1:8080`
-3. **Mutex Acquisition Request:** Requesting a balance or transfer transaction causes a client to broadcast `REQUEST` packets to its peers, logging state updates with a 3-second artificial transmission delay.
-4. **Synchronous Ledger Execution:** Once the client verifies it holds the distributed lock (top of its local queue + all replies received), it securely queries the blockchain master or appends a cryptographically signed transaction block.
+3. **Mutex Acquisition Request:** Requesting a balance or transfer transaction causes a client to broadcast `REQUEST` packets to its peers, logging state updates with a randomized **100ms–1000ms artificial transmission delay** to simulate network latency.
+4. 4. **Synchronous Ledger Execution:** Once the client verifies it holds the distributed lock (top of its local queue + all replies received), it securely queries the blockchain master or appends a cryptographically signed transaction block.
 5. **Mutex Release:** The client broadcasts a `RELEASE` packet to clear the distributed lock state, updating all peer queues so the next sequential process can proceed.
